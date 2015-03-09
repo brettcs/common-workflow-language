@@ -29,21 +29,15 @@ def jseval(job, expression, context=None):
 
 
 def resolve_transform(job, val, context=None):
-    if not isinstance(val, dict) or val.get('@type') != 'Transform':
+    if not isinstance(val, dict) or val.get('class') != 'JavascriptExpression':
         return val
-    lang = val.get('language')
     expr = val.get('value')
-    if lang == 'javascript':
-        return jseval(job, expr, context)
-    elif lang == 'jsonpointer':
-        return resolve_pointer(job, expr)
-    else:
-        raise Exception('Unknown language for Transform: %s' % lang)
+    return jseval(job, expr, context)
 
 
 def get_args(job, adapter, value=None, schema=None, key=None, tool=None):
-    if schema and 'adapter' in schema:
-        adapter = schema['adapter']
+    if schema and 'inputBinding' in schema:
+        adapter = schema['inputBinding']
     if adapter is None:
         return Args(None, [])
 
@@ -54,7 +48,7 @@ def get_args(job, adapter, value=None, schema=None, key=None, tool=None):
     arg_val = adapter.get('argValue')
     pos = [position, key]
 
-    if isinstance(arg_val, dict) and arg_val.get('@type') == 'Transform':
+    if isinstance(arg_val, dict) and arg_val.get('class') == 'JavascriptExpression':
         value = resolve_transform(job, arg_val, value)
     elif isinstance(value, dict) and value.get('@type') == 'File':
         value = value.get('path')
@@ -77,7 +71,7 @@ def get_args(job, adapter, value=None, schema=None, key=None, tool=None):
                 logging.error('Field not found in schema: "%s". Schema: %s', k, schema)
                 continue
             field = field[0]
-            field_adapter = field.get('adapter')
+            field_adapter = field.get('inputBinding')
             field_schema = schema_by_name(field.get('type'), tool)
             args.append(get_args(job, field_adapter, v, field_schema, k, tool=tool))
         return Args(pos, merge_args(args))
@@ -129,21 +123,20 @@ def schema_for_item(value, array_schema, tool):
 
 
 def get_proc_args_and_redirects(tool, job):
-    adaptable_inputs = [i for i in tool.get('inputs', []) if 'adapter' in i.get('schema', {})]
+    adaptable_inputs = [i for i in tool.get('inputs', []) if 'inputBinding' in i]
     input_args = []
     for i in adaptable_inputs:
-        inp_id = i['@id'][1:]
+        inp_id = i['id'][1:]
         inp_val = job['inputs'].get(inp_id)
-        inp_adapter = i['schema']['adapter']
+        inp_adapter = i['inputBinding']
         input_args.append(get_args(job, inp_adapter, inp_val, i['schema'], inp_id, tool=tool))
-    cli_adapter = tool['cliAdapter']
-    adapter_args = [get_args(job, a, tool=tool) for a in cli_adapter.get('argAdapters', [])]
-    if isinstance(cli_adapter.get('baseCmd'), basestring):
-        cli_adapter['baseCmd'] = [cli_adapter['baseCmd']]
-    base_cmd = [resolve_transform(job, v) for v in cli_adapter['baseCmd']]
+    adapter_args = [get_args(job, a, tool=tool) for a in tool.get('arguments', [])]
+    if isinstance(tool.get('baseCmd'), basestring):
+        tool['baseCmd'] = [tool['baseCmd']]
+    base_cmd = [resolve_transform(job, v) for v in tool['baseCmd']]
     argv = base_cmd + merge_args(input_args + adapter_args)
-    stdin = resolve_transform(job, cli_adapter.get('stdin'))
-    stdout = resolve_transform(job, cli_adapter.get('stdout'))
+    stdin = resolve_transform(job, tool.get('stdin'))
+    stdout = resolve_transform(job, tool.get('stdout'))
     return argv, stdin, stdout
 
 

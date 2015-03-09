@@ -2,7 +2,7 @@ import yaml
 import os
 import networkx as nx
 
-from tool_new import jseval
+from tool_new import jseval, get_proc_args_and_redirects
 
 
 def listify_properties(obj):
@@ -41,6 +41,14 @@ class CLTool(object):
         self.url = url
 
     def run(self, inputs):
+        job = {
+            'inputs': inputs,
+            'allocatedResources': {
+                'cpu': 1,
+                'mem': 2048,
+            },
+        }
+        argv, stdin, stdout = get_proc_args_and_redirects(self.d, job)
         return {}
 
 

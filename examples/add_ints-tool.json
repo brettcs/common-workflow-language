@@ -1,27 +1,24 @@
 {
-    "@type": "CommandLineTool",
-    "@context": "https://raw.githubusercontent.com/common-workflow-language/common-workflow-language/draft2/specification/context.json",
+    "class": "CommandLineTool",
     "description": "Adds two integers without using files or adapters.",
     "inputs": [
         {
-            "@id": "#a",
-            "schema": {"type": "int"},
+            "id": "#a",
+            "type": "int",
             "depth": 0
         },
         {
-            "@id": "#b",
-            "schema": {"type": "int"},
+            "id": "#b",
+            "type": "int",
             "depth": 0
         }
     ],
     "outputs": [
         {
-            "@id": "#c",
-            "schema": {"type": "int"},
+            "id": "#c",
+            "type": "int",
             "depth": 0
         }
     ],
-    "cliAdapter": {
-      "baseCmd": ["add_ints.py"]
-    }
+    "baseCmd": ["add_ints.py"]
 }

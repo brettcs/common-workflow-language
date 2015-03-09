@@ -1,47 +1,37 @@
 {
-    "@type": "CommandLineTool",
-    "@context": "https://raw.githubusercontent.com/common-workflow-language/common-workflow-language/draft2/specification/context.json",
+    "class": "CommandLineTool",
     "description": "Grep without optional parameters.",
     "requirements": [
         {
-          "@type": "DockerContainer",
+          "class": "DockerContainer",
           "dockerRepo": "arvados/jobs"
         }
     ],
     "inputs": [
         {
-            "@id": "#file1",
+            "id": "#file1",
             "depth": 0,
-            "schema": {
                 "type": "File"
-            }
         },
         {
-            "@id": "#pattern",
+            "id": "#pattern",
             "depth": 0,
-            "schema": {
                 "type": "string",
-                "adapter": {"position": 0}
-            }
+                "inputBinding": {"position": 0}
         }
     ],
     "outputs": [
         {
-            "@id": "#output",
+            "id": "#output",
             "depth": 0,
-            "schema": {
                 "type": "File",
-                "adapter": {"glob": "output.txt"}
-            }
+                "inputBinding": {"glob": "output.txt"}
         }
     ],
-    "cliAdapter": {
         "baseCmd": "grep",
         "stdout": "output.txt",
         "stdin": {
-            "@type": "Transform",
-            "language": "javascript",
+            "class": "JavascriptExpression",
             "value": "$job.inputs.file1.path"
         }
-    }
 }

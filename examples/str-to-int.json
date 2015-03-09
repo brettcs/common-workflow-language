@@ -1,11 +1,9 @@
 {
-  "@type": "SimpleTransformTool",
-  "@context": "https://raw.githubusercontent.com/common-workflow-language/common-workflow-language/draft2/specification/context.json",
-  "inputs": {"@id": "#str", "depth": 0, "schema": {"type": "string"}},
-  "outputs": {"@id": "#int", "depth": 0, "schema": {"type": "int"}},
+  "class": "SimpleTransformTool",
+  "inputs": {"id": "#str", "depth": 0, "type": "string"},
+  "outputs": {"id": "#int", "depth": 0, "type": "int"},
   "script": {
-    "@type": "Transform",
-    "language": "javascript",
+    "class": "JavascriptExpression",
     "value": "{return {int: Number($job.inputs.str)};}"
   }
 }
