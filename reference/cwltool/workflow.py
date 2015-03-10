@@ -1,5 +1,7 @@
 import yaml
 import os
+import tempfile
+import glob
 import networkx as nx
 
 from tool_new import jseval, get_proc_args_and_redirects
@@ -41,6 +43,7 @@ class CLTool(object):
         self.url = url
 
     def run(self, inputs):
+        result = {}
         job = {
             'inputs': inputs,
             'allocatedResources': {
@@ -49,7 +52,31 @@ class CLTool(object):
             },
         }
         argv, stdin, stdout = get_proc_args_and_redirects(self.d, job)
-        return {}
+        line = ' '.join(argv)
+        if stdin:
+            line += ' < ' + stdin
+        if stdout:
+            line += ' > ' + stdout
+        print line
+        job_dir = tempfile.mkdtemp()
+        os.chdir(job_dir)
+        if os.system(line):
+            raise Exception('Process failed.')
+        print os.listdir('.')
+        for out in self.d.get('outputs', []):
+            adapter = out.get('outputBinding')
+            if adapter is None and isinstance(out.get('type'), dict):
+                adapter = out['type'].get('outputBinding')
+            if adapter is None or not adapter.get('glob'):
+                continue
+            matches = glob.glob(adapter['glob'])
+            if out['type'] == 'File' or out['type']['type'] == 'File':
+                result[out['id'][1:]] =  {"@type": "File", "path": os.path.abspath(matches[0])}
+                continue
+            if out['type']['type'] == 'array':
+                result[out['id'][1:]] = [{"@type": "File", "path": os.path.abspath(p)} for p in matches]
+                continue
+        return result
 
 
 class ExpressionTool(object):
@@ -144,10 +171,19 @@ class Workflow(object):
         return {p.split('/')[-1]: self.g.node[p]['result'] for p in pre}
 
 
-def test(path, inputs, outputs):
-    assert load_url(path).run(inputs) == outputs
+def test(path, inputs, outputs, noassert=False):
+    result = load_url(path).run(inputs)
+    print 'Result:', result
+    if not noassert:
+        assert result == outputs, 'expected %s' % outputs
 
 
 if __name__ == '__main__':
     EX = os.path.join(os.path.dirname(__file__), '../../examples/')
-    test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
+    # test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
+    # test(EX + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
+    test(EX + 'cat4-tool.json', {
+        'file1': {"@type": "File", "path": EX + 'hello.txt'}
+    }, {
+        'output': {"@type": "File", "path": "output.txt"}
+    }, noassert=True)

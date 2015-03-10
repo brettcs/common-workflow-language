@@ -129,7 +129,7 @@ def get_proc_args_and_redirects(tool, job):
         inp_id = i['id'][1:]
         inp_val = job['inputs'].get(inp_id)
         inp_adapter = i['inputBinding']
-        input_args.append(get_args(job, inp_adapter, inp_val, i['schema'], inp_id, tool=tool))
+        input_args.append(get_args(job, inp_adapter, inp_val, i['type'], inp_id, tool=tool))
     adapter_args = [get_args(job, a, tool=tool) for a in tool.get('arguments', [])]
     if isinstance(tool.get('baseCmd'), basestring):
         tool['baseCmd'] = [tool['baseCmd']]

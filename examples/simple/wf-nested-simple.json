@@ -1,0 +1,22 @@
+{
+  "class": "Workflow",
+  "inputs": {"id": "#arr", "depth": 1, "type": {"type": "array", "items": "int"}},
+  "outputs": {"id": "#square_sum_times_two", "links": {"source": "#times_two/c"}, "type": "int"},
+  "steps": [
+    {
+      "id": "#sq_sum",
+      "impl": "wf-square-sum.json",
+      "inputs": {"id": "#sq_sum/arr", "depth": 1, "links": {"source": "#arr"}},
+      "outputs": {"id": "#sq_sum/square_sum"}
+    },
+    {
+      "id": "#times_two",
+      "impl": "mul.json",
+      "inputs": [
+        {"id": "#times_two/a", "links": {"source": "#sq_sum/square_sum"}},
+        {"id": "#times_two/b", "value": 2}
+      ],
+      "outputs": {"id": "#times_two/c"}
+    }
+  ]
+}
