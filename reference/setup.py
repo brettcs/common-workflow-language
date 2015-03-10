@@ -37,7 +37,9 @@ setup(name='cwltool',
       install_requires=[
           'jsonschema >= 2.4.0',
           'requests',
-          'PyYAML'
+          'PyYAML',
+          'networkx',
+          'avro',
         ],
       test_suite='tests',
       tests_require=[],

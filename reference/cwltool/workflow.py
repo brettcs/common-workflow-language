@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 import glob
 import logging
@@ -8,7 +9,7 @@ from copy import deepcopy
 import networkx as nx
 import yaml
 
-from tool_new import jseval, get_proc_args_and_redirects
+from tool_new import jseval, get_proc_args_and_redirects, map_paths
 
 log = logging.getLogger(__name__)
 
@@ -240,17 +241,33 @@ def test(path, inputs, outputs):
     assert path_to_name(result) == outputs, 'expected %s' % outputs
 
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    EX = os.path.join(os.path.dirname(__file__), '../../examples/')
-    # test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
-    # test(EX + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
-    # test(EX + 'cat4-tool.json', {
-    #     'file1': {"@type": "File", "path": EX + 'hello.txt'}
-    # }, {
-    #     'output': "output.txt"
-    # })
-    test(EX + 'wf-count-lines.json', {
-        'files': [{"@type": "File", "path": EX + 'lines1.txt'}, {"@type": "File", "path": EX + 'lines2.txt'}],
+def run_tests():
+    ex = os.path.join(os.path.dirname(__file__), '../../examples/')
+    test(ex + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
+    test(ex + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
+    test(ex + 'cat4-tool.json', {
+        'file1': {"@type": "File", "path": ex + 'hello.txt'}
+    }, {
+        'output': "output.txt"
+    })
+    test(ex + 'wf-count-lines.json', {
+        'files': [{"@type": "File", "path": ex + 'lines1.txt'}, {"@type": "File", "path": ex + 'lines2.txt'}],
         'pattern': 'find_me',
     }, {'result': 3})
+
+
+def run(runnable, inputs):
+    tool = load_url(runnable)
+    with open(inputs) as fp:
+        inputs = yaml.load(fp)
+    print tool.run(map_paths(inputs, os.path.abspath('.')))
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    if len(sys.argv) == 1:
+        run_tests()
+    elif len(sys.argv) == 3:
+        run(*sys.argv[1:])
+    else:
+        sys.exit(1)
