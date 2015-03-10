@@ -1,24 +1,24 @@
 {
-    "class": "CommandLineTool",
-    "description": "Adds two integers without using files or adapters.",
-    "inputs": [
-        {
-            "id": "#a",
-            "type": "int",
-            "depth": 0
-        },
-        {
-            "id": "#b",
-            "type": "int",
-            "depth": 0
-        }
-    ],
-    "outputs": [
-        {
-            "id": "#c",
-            "type": "int",
-            "depth": 0
-        }
-    ],
-    "baseCmd": ["add_ints.py"]
+  "class": "CommandLineTool",
+  "description": "Adds two integers without using files or adapters.",
+  "inputs": [
+    {
+      "id": "#a",
+      "type": "int",
+      "depth": 0
+    },
+    {
+      "id": "#b",
+      "type": "int",
+      "depth": 0
+    }
+  ],
+  "outputs": [
+    {
+      "id": "#c",
+      "type": "int",
+      "depth": 0
+    }
+  ],
+  "baseCmd": ["add_ints.py"]
 }

@@ -1,8 +1,8 @@
 {
-    "inputs": {
-        "file1": {
-            "@type": "File",
-            "path": "hello.txt"
-        }
+  "inputs": {
+    "file1": {
+      "@type": "File",
+      "path": "hello.txt"
     }
+  }
 }

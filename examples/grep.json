@@ -1,37 +1,37 @@
 {
-    "class": "CommandLineTool",
-    "description": "Grep without optional parameters.",
-    "requirements": [
-        {
-          "class": "DockerContainer",
-          "dockerRepo": "arvados/jobs"
-        }
-    ],
-    "inputs": [
-        {
-            "id": "#file1",
-            "depth": 0,
-                "type": "File"
-        },
-        {
-            "id": "#pattern",
-            "depth": 0,
-                "type": "string",
-                "inputBinding": {"position": 0}
-        }
-    ],
-    "outputs": [
-        {
-            "id": "#output",
-            "depth": 0,
-                "type": "File",
-                "inputBinding": {"glob": "output.txt"}
-        }
-    ],
-        "baseCmd": "grep",
-        "stdout": "output.txt",
-        "stdin": {
-            "class": "JavascriptExpression",
-            "value": "$job.inputs.file1.path"
-        }
+  "class": "CommandLineTool",
+  "description": "Grep without optional parameters.",
+  "requirements": [
+    {
+      "class": "DockerContainer",
+      "dockerRepo": "arvados/jobs"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "#file1",
+      "depth": 0,
+      "type": "File"
+    },
+    {
+      "id": "#pattern",
+      "depth": 0,
+      "type": "string",
+      "inputBinding": {"position": 0}
+    }
+  ],
+  "outputs": [
+    {
+      "id": "#output",
+      "depth": 0,
+      "type": "File",
+      "inputBinding": {"glob": "output.txt"}
+    }
+  ],
+  "baseCmd": "grep",
+  "stdout": "output.txt",
+  "stdin": {
+    "class": "JavascriptExpression",
+    "value": "$job.inputs.file1.path"
+  }
 }

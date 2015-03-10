@@ -1,7 +1,22 @@
 {
   "class": "ExpressionTool",
-  "inputs": [{"id": "#a", "depth": 0, "type": "int"}, {"id": "#b", "depth": 0, "type": "int"}],
-  "outputs": {"id": "#c", "depth": 0, "type": "int"},
+  "inputs": [
+    {
+      "id": "#a",
+      "depth": 0,
+      "type": "int"
+    },
+    {
+      "id": "#b",
+      "depth": 0,
+      "type": "int"
+    }
+  ],
+  "outputs": {
+    "id": "#c",
+    "depth": 0,
+    "type": "int"
+  },
   "expression": {
     "class": "JavascriptExpression",
     "value": "{return {c: $job.inputs.a * $job.inputs.b};}"

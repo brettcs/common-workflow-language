@@ -1,20 +1,40 @@
 {
   "class": "Workflow",
-  "inputs": {"id": "#arr", "depth": 1, "type": {"type": "array", "items": "int"}},
-  "outputs": {"id": "#square_sum", "links": {"source": "#square/c"}},
+  "inputs": {
+    "id": "#arr",
+    "depth": 1,
+    "type": {
+      "type": "array",
+      "items": "int"
+    }
+  },
+  "outputs": {
+    "id": "#square_sum",
+    "links": {"source": "#square/c"}
+  },
   "steps": [
     {
       "id": "#sum",
       "impl": "sum.json",
-      "inputs": {"id": "#sum/arr", "depth": 1, "links": {"source": "#arr"}},
+      "inputs": {
+        "id": "#sum/arr",
+        "depth": 1,
+        "links": {"source": "#arr"}
+      },
       "outputs": {"id": "#sum/sum"}
     },
     {
       "id": "#square",
       "impl": "mul.json",
       "inputs": [
-        {"id": "#square/a", "links": {"source": "#sum/sum"}},
-        {"id": "#square/b", "links": {"source": "#sum/sum"}}
+        {
+          "id": "#square/a",
+          "links": {"source": "#sum/sum"}
+        },
+        {
+          "id": "#square/b",
+          "links": {"source": "#sum/sum"}
+        }
       ],
       "outputs": {"id": "#square/c"}
     }

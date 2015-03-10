@@ -3,8 +3,11 @@ import os
 import tempfile
 import glob
 import networkx as nx
+import logging
 
 from tool_new import jseval, get_proc_args_and_redirects
+
+log = logging.getLogger(__name__)
 
 
 def listify_properties(obj):
@@ -57,12 +60,11 @@ class CLTool(object):
             line += ' < ' + stdin
         if stdout:
             line += ' > ' + stdout
-        print line
+        log.debug('Cmd: %s', line)
         job_dir = tempfile.mkdtemp()
         os.chdir(job_dir)
         if os.system(line):
             raise Exception('Process failed.')
-        print os.listdir('.')
         for out in self.d.get('outputs', []):
             adapter = out.get('outputBinding')
             if adapter is None and isinstance(out.get('type'), dict):
@@ -171,19 +173,30 @@ class Workflow(object):
         return {p.split('/')[-1]: self.g.node[p]['result'] for p in pre}
 
 
-def test(path, inputs, outputs, noassert=False):
+def test(path, inputs, outputs):
     result = load_url(path).run(inputs)
-    print 'Result:', result
-    if not noassert:
-        assert result == outputs, 'expected %s' % outputs
+
+    def path_to_name(o):
+        if isinstance(o, list):
+            return [path_to_name(i) for i in o]
+        if isinstance(o, dict):
+            if o.get('@type') == 'File':
+                return {'name': os.path.basename(o['path'])}
+            else:
+                return {k: path_to_name(v) for k, v in o.iteritems()}
+        return o
+
+    log.info('Result: %s', result)
+    assert path_to_name(result) == outputs, 'expected %s' % outputs
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     EX = os.path.join(os.path.dirname(__file__), '../../examples/')
-    # test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
-    # test(EX + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
+    test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
+    test(EX + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
     test(EX + 'cat4-tool.json', {
         'file1': {"@type": "File", "path": EX + 'hello.txt'}
     }, {
-        'output': {"@type": "File", "path": "output.txt"}
-    }, noassert=True)
+        'output': {"name": "output.txt"}
+    })

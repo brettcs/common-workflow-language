@@ -1,7 +1,18 @@
 {
   "class": "ExpressionTool",
-  "inputs": {"id": "#arr", "depth": 1, "type": {"type": "array", "items": "int"}},
-  "outputs": {"id": "#sum", "depth": 0, "type": "int"},
+  "inputs": {
+    "id": "#arr",
+    "depth": 1,
+    "type": {
+      "type": "array",
+      "items": "int"
+    }
+  },
+  "outputs": {
+    "id": "#sum",
+    "depth": 0,
+    "type": "int"
+  },
   "script": {
     "class": "JavascriptExpression",
     "value": "{return {sum: $job.inputs.arr.reduce(function(a,b){return a+b;}, 0)};}"

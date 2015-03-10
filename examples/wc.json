@@ -1,37 +1,37 @@
 {
-    "class": "CommandLineTool",
-    "description": "Word count without optional parameters, except for -l",
-    "requirements": [
-        {
-          "class": "DockerContainer",
-          "dockerRepo": "arvados/jobs"
-        }
-    ],
-    "inputs": [
-        {
-            "id": "#file1",
-            "depth": 0,
-                "type": "File"
-        },
-        {
-            "id": "#countLines",
-            "depth": 0,
-                "type": "boolean",
-                "inputBinding": {"prefix": "-l"}
-        }
-    ],
-    "outputs": [
-        {
-            "id": "#output",
-            "depth": 0,
-                "type": "File",
-                "outputBinding": {"glob": "output.txt"}
-        }
-    ],
-        "baseCmd": ["wc"],
-        "stdout": "output.txt",
-        "stdin": {
-            "class": "JavascriptExpression",
-            "value": "$job.inputs.file1.path"
-        }
+  "class": "CommandLineTool",
+  "description": "Word count without optional parameters, except for -l",
+  "requirements": [
+    {
+      "class": "DockerContainer",
+      "dockerRepo": "arvados/jobs"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "#file1",
+      "depth": 0,
+      "type": "File"
+    },
+    {
+      "id": "#countLines",
+      "depth": 0,
+      "type": "boolean",
+      "inputBinding": {"prefix": "-l"}
+    }
+  ],
+  "outputs": [
+    {
+      "id": "#output",
+      "depth": 0,
+      "type": "File",
+      "outputBinding": {"glob": "output.txt"}
+    }
+  ],
+  "baseCmd": ["wc"],
+  "stdout": "output.txt",
+  "stdin": {
+    "class": "JavascriptExpression",
+    "value": "$job.inputs.file1.path"
+  }
 }

@@ -1,44 +1,44 @@
 {
-    "class": "CommandLineTool",
-    "requirements": [
-        {
-          "class": "DockerContainer",
-          "dockerRepo": "images.sbgenomics.com/rabix/bwa",
-          "imageId": "9d3b9b0359cf"
-        },
-        {
-          "class": "MemoryRequirement",
-          "value": 5000
-        }
-    ],
+  "class": "CommandLineTool",
+  "requirements": [
+    {
+      "class": "DockerContainer",
+      "dockerRepo": "images.sbgenomics.com/rabix/bwa",
+      "imageId": "9d3b9b0359cf"
+    },
+    {
+      "class": "MemoryRequirement",
+      "value": 5000
+    }
+  ],
   "inputs": [
     {
       "id": "#reference",
       "depth": 0,
-        "type": "File",
-        "inputBinding": {
-          "position": 2
-        }
+      "type": "File",
+      "inputBinding": {
+        "position": 2
+      }
     },
     {
       "id": "#reads",
       "depth": 1,
       "inputBinding": {
         "position": 3
-      }
+      },
       "type": {
         "type": "array",
-        "items": "File",
+        "items": "File"
       }
     },
     {
       "id": "#minimum_seed_length",
       "depth": 0,
-        "type": "int",
-        "inputBinding": {
-          "position": 1,
-          "prefix": "-m"
-        }
+      "type": "int",
+      "inputBinding": {
+        "position": 1,
+        "prefix": "-m"
+      }
     },
     {
       "id": "#min_std_max_min",
@@ -46,22 +46,22 @@
       "schema": {
         "items": "int",
         "type": "array"
+      },
+      "inputBinding": {
+        "itemSeparator": ",",
+        "position": 1,
+        "prefix": "-I"
       }
-        "inputBinding": {
-          "itemSeparator": ",",
-          "position": 1,
-          "prefix": "-I"
-        }
     }
   ],
   "outputs": [
     {
       "id": "#sam",
       "depth": 0,
-        "type": "File",
-        "outputBinding": {
-          "glob": "output.sam"
-        }
+      "type": "File",
+      "outputBinding": {
+        "glob": "output.sam"
+      }
     }
   ],
   "arguments": [
@@ -74,6 +74,9 @@
       "prefix": "-t"
     }
   ],
-  "baseCmd": ["bwa", "mem"],
+  "baseCmd": [
+    "bwa",
+    "mem"
+  ],
   "stdout": "output.sam"
 }

@@ -1,7 +1,15 @@
 {
   "class": "SimpleTransformTool",
-  "inputs": {"id": "#str", "depth": 0, "type": "string"},
-  "outputs": {"id": "#int", "depth": 0, "type": "int"},
+  "inputs": {
+    "id": "#str",
+    "depth": 0,
+    "type": "string"
+  },
+  "outputs": {
+    "id": "#int",
+    "depth": 0,
+    "type": "int"
+  },
   "script": {
     "class": "JavascriptExpression",
     "value": "{return {int: Number($job.inputs.str)};}"

@@ -1,9 +1,9 @@
 {
-    "inputs": {
-        "file1": {
-            "@type": "File",
-            "path": "hello.txt"
-        },
-        "numbering": true
-    }
+  "inputs": {
+    "file1": {
+      "@type": "File",
+      "path": "hello.txt"
+    },
+    "numbering": true
+  }
 }

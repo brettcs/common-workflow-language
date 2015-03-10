@@ -10,8 +10,9 @@ def main():
         with open(job['inputs']['file1']['path']) as fp:
             contents = fp.read()
         json.dump({
-            'result': contents
-        }, out)
+                      'result': contents
+                  }, out)
+
 
 if __name__ == '__main__':
     main()

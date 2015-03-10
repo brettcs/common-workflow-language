@@ -1,17 +1,38 @@
 {
   "class": "Workflow",
   "inputs": [
-    {"id": "#files", "depth": 1, "type": {"type": "array", "items": "File"}},
-    {"id": "#pattern", "depth": 0, "type": "string"}
+    {
+      "id": "#files",
+      "depth": 1,
+      "type": {
+        "type": "array",
+        "items": "File"
+      }
+    },
+    {
+      "id": "#pattern",
+      "depth": 0,
+      "type": "string"
+    }
   ],
-  "outputs": {"id": "#result", "depth": 0, "type": "int"},
+  "outputs": {
+    "id": "#result",
+    "depth": 0,
+    "type": "int"
+  },
   "steps": [
     {
       "id": "#grep",
       "impl": "grep.json",
       "inputs": [
-        {"id": "#grep/file1", "links": {"source": "#files"}},
-        {"id": "#grep/pattern", "links": {"source": "#pattern"}}
+        {
+          "id": "#grep/file1",
+          "links": {"source": "#files"}
+        },
+        {
+          "id": "#grep/pattern",
+          "links": {"source": "#pattern"}
+        }
       ],
       "outputs": {"id": "#grep/output"}
     },
@@ -19,27 +40,43 @@
       "id": "#wc",
       "impl": "wc.json",
       "inputs": [
-        {"id": "#wc/file1", "links": {"source": "#grep/output"}},
-        {"id": "#wc/countLines", "value": true}
+        {
+          "id": "#wc/file1",
+          "links": {"source": "#grep/output"}
+        },
+        {
+          "id": "#wc/countLines",
+          "value": true
+        }
       ],
       "outputs": {"id": "#wc/output"}
     },
     {
       "id": "#to_string",
       "impl": "to_string.json",
-      "inputs": {"id": "#to_string/file1", "links": {"source": "#wc/output"}},
+      "inputs": {
+        "id": "#to_string/file1",
+        "links": {"source": "#wc/output"}
+      },
       "outputs": {"id": "#to_string/result"}
     },
     {
       "id": "#str-to-int",
       "impl": "str-to-int.json",
-      "inputs": {"id": "#str-to-int/str", "links": {"source": "#to_string/result"}},
+      "inputs": {
+        "id": "#str-to-int/str",
+        "links": {"source": "#to_string/result"}
+      },
       "outputs": {"id": "#str-to-int/int"}
     },
     {
       "id": "#sum",
       "impl": "sum.json",
-      "inputs": {"id": "#sum/arr", "depth": 1, "links": {"source": "#str-to-int/int"}},
+      "inputs": {
+        "id": "#sum/arr",
+        "depth": 1,
+        "links": {"source": "#str-to-int/int"}
+      },
       "outputs": {"id": "#sum/sum"}
     }
   ]
