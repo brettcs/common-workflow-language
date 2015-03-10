@@ -18,7 +18,8 @@
   "outputs": {
     "id": "#result",
     "depth": 0,
-    "type": "int"
+    "type": "int",
+    "links": {"source": "#sum/sum"}
   },
   "steps": [
     {

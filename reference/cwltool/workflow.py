@@ -1,9 +1,12 @@
-import yaml
 import os
 import tempfile
 import glob
-import networkx as nx
 import logging
+import json
+from copy import deepcopy
+
+import networkx as nx
+import yaml
 
 from tool_new import jseval, get_proc_args_and_redirects
 
@@ -11,7 +14,11 @@ log = logging.getLogger(__name__)
 
 
 def listify_properties(obj):
-    props = 'inputs', 'outputs', 'links', 'baseCmd', 'inputBindings', 'schemaDefs', 'steps'
+    """
+    Modify obj in place to create single-item lists
+    for certain properties whose values can be either lists or single items.
+    """
+    props = 'inputs', 'outputs', 'links', 'baseCmd', 'arguments', 'schemaDefs', 'steps'
     if isinstance(obj, list):
         for val in obj:
             listify_properties(val)
@@ -23,16 +30,17 @@ def listify_properties(obj):
 
 
 def load_url(url, parent=None):
+    """ Create appropriate class from url or path contents. """
     if parent:
         url = os.path.join(os.path.dirname(parent), url)
-    with open(url) as fp:
+    with open(url) as fp:  # TODO: fetch actual URLs
         doc = yaml.load(fp)
     if not isinstance(doc, dict):
-        raise Exception('Document must be an object.')
+        raise TypeError('Document must be a JSON or YAML object.')
     listify_properties(doc)
     cls = doc.get('class')
     if cls not in ('CommandLineTool', 'ExpressionTool', 'Workflow'):
-        raise Exception('Unknown type: %s' % cls)
+        raise ValueError('Unknown type: %s' % cls)
     return {
         'CommandLineTool': CLTool,
         'ExpressionTool': ExpressionTool,
@@ -40,13 +48,48 @@ def load_url(url, parent=None):
     }[cls](doc, url)
 
 
-class CLTool(object):
+class BaseApp(object):
+    """ Base class for CWL runnables. Handles implicit iteration. """
     def __init__(self, d, url):
         self.d = d
         self.url = url
 
     def run(self, inputs):
-        result = {}
+        def depth(o):
+            if not isinstance(o, list) or not o:
+                return 0
+            return depth(o[0]) + 1
+        inputs = inputs or {}
+        expected_depths = {i['id'][1:]: i.get('depth', 0) for i in self.d.get('inputs', [])}
+        actual_depths = {k: depth(v) for k, v in inputs.iteritems()}
+        expected_depths = {k: v for k, v in expected_depths.iteritems() if k in actual_depths}
+        if expected_depths == actual_depths:
+            return self._run(inputs)
+
+        mismatch = {k: (v, actual_depths[k]) for k, v in expected_depths.iteritems() if actual_depths[k] != v}
+        log.debug('Depth mismatch: %s', mismatch)
+        if len(mismatch) > 1:
+            raise ValueError('Depth mismatch on more than one port.')
+        expected, actual = mismatch.values()[0]
+        if actual < expected:
+            raise ValueError('Actual depth less than expected.')
+        if actual - expected != 1:
+            raise NotImplementedError('Currently only handling iteration on one level of nesting.')
+        port = mismatch.keys()[0]
+        results = []
+        for item in inputs[port]:
+            inps = deepcopy(inputs)
+            inps[port] = item
+            results.append(self._run(inps))
+        outputs = reduce(set.union, [set(r.keys()) for r in results], set())
+        return {k: [r.get(k) for r in results] for k in outputs}
+
+    def _run(self, inputs):
+        raise NotImplementedError()
+
+
+class CLTool(BaseApp):
+    def _run(self, inputs):
         job = {
             'inputs': inputs,
             'allocatedResources': {
@@ -63,8 +106,15 @@ class CLTool(object):
         log.debug('Cmd: %s', line)
         job_dir = tempfile.mkdtemp()
         os.chdir(job_dir)
-        if os.system(line):
-            raise Exception('Process failed.')
+        with open('job.cwl.json', 'w') as fp:
+            json.dump(job, fp)
+        if os.system(line):  # TODO: shell escape or use Popen
+            raise RuntimeError('Process failed.')
+
+        if os.path.isfile('result.cwl.json'):
+            with open('result.cwl.json') as fp:
+                return json.load(fp)
+        result = {}
         for out in self.d.get('outputs', []):
             adapter = out.get('outputBinding')
             if adapter is None and isinstance(out.get('type'), dict):
@@ -73,28 +123,25 @@ class CLTool(object):
                 continue
             matches = glob.glob(adapter['glob'])
             if out['type'] == 'File' or out['type']['type'] == 'File':
-                result[out['id'][1:]] =  {"@type": "File", "path": os.path.abspath(matches[0])}
+                result[out['id'][1:]] = {"@type": "File", "path": os.path.abspath(matches[0])}
                 continue
             if out['type']['type'] == 'array':
                 result[out['id'][1:]] = [{"@type": "File", "path": os.path.abspath(p)} for p in matches]
                 continue
+        log.debug('RESULT: %s', result)
         return result
 
 
-class ExpressionTool(object):
-    def __init__(self, d, url):
-        self.d = d
-        self.url = url
-
-    def run(self, inputs):
+class ExpressionTool(BaseApp):
+    def _run(self, inputs):
         result = jseval({'inputs': inputs}, self.d['expression']['value'])
+        log.debug('RESULT: %s', result)
         return result
 
 
-class Workflow(object):
+class Workflow(BaseApp):
     def __init__(self, d, url):
-        self.d = d
-        self.url = url
+        super(Workflow, self).__init__(d, url)
         self.g = g = nx.DiGraph()
         self.result = {}
 
@@ -118,12 +165,12 @@ class Workflow(object):
             for out in step.get('outputs', []):
                 g.add_node(out['id'], type='port', depth=out.get('depth', 0))
                 g.add_edge(step_id, out['id'])
-        assert nx.is_directed_acyclic_graph(g), 'Cycles found; aborting.'
+        assert nx.is_directed_acyclic_graph(g), 'Workflow contains a cycle.'
 
     def set_inputs(self, inputs):
         inputs = inputs or {}
         for k, v in inputs.iteritems():
-            self.g.node['#'+k]['val'] = v
+            self.g.node['#' + k]['val'] = v
 
     def finish(self, node, result):
         self.g.node[node].update(status='done', result=result)
@@ -146,17 +193,19 @@ class Workflow(object):
         app = data['impl']
         return self.finish(node, app.run(data['val']))
 
-    def run(self, inputs):
+    def _run(self, inputs):
         self.set_inputs(inputs)
         while True:
             node, data = self.next()
             if not node:
-                return self._make_outputs()
+                result = self._make_outputs()
+                log.debug('RESULT: %s', result)
+                return result
             self.execute(node)
 
     def _make_outputs(self):
         for out in self.result.keys():
-            self.result[out] = self.g.node['#'+out]['result']
+            self.result[out] = self.g.node['#' + out]['result']
         return self.result
 
     def _make_val(self, node, data):
@@ -174,29 +223,34 @@ class Workflow(object):
 
 
 def test(path, inputs, outputs):
-    result = load_url(path).run(inputs)
-
+    """ Assert that running the thing on <path> with <inputs> produces <outputs>. """
     def path_to_name(o):
+        """ Convert File objects to just their name (string). """
         if isinstance(o, list):
             return [path_to_name(i) for i in o]
         if isinstance(o, dict):
             if o.get('@type') == 'File':
-                return {'name': os.path.basename(o['path'])}
+                return os.path.basename(o['path'])
             else:
                 return {k: path_to_name(v) for k, v in o.iteritems()}
         return o
 
-    log.info('Result: %s', result)
+    result = load_url(path).run(inputs)
+    log.info('-- Complete --\n %s', result)
     assert path_to_name(result) == outputs, 'expected %s' % outputs
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     EX = os.path.join(os.path.dirname(__file__), '../../examples/')
-    test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
-    test(EX + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
-    test(EX + 'cat4-tool.json', {
-        'file1': {"@type": "File", "path": EX + 'hello.txt'}
-    }, {
-        'output': {"name": "output.txt"}
-    })
+    # test(EX + 'simple/wf-square-sum.json', {'arr': [1, 2]}, {'square_sum': 9})
+    # test(EX + 'simple/wf-nested-simple.json', {'arr': [1, 2]}, {'square_sum_times_two': 18})
+    # test(EX + 'cat4-tool.json', {
+    #     'file1': {"@type": "File", "path": EX + 'hello.txt'}
+    # }, {
+    #     'output': "output.txt"
+    # })
+    test(EX + 'wf-count-lines.json', {
+        'files': [{"@type": "File", "path": EX + 'lines1.txt'}, {"@type": "File", "path": EX + 'lines2.txt'}],
+        'pattern': 'find_me',
+    }, {'result': 3})

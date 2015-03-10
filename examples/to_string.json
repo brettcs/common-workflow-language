@@ -1,20 +1,15 @@
 {
-  "@type": "CommandLineTool",
-  "@context": "https://raw.githubusercontent.com/common-workflow-language/common-workflow-language/draft2/specification/context.json",
+  "class": "CommandLineTool",
   "description": "Outputs file contents as string.",
-  "inputs": [
-    {
-      "id": "#file1",
-      "schema": {"type": "File"},
-      "depth": 0
-    }
-  ],
-  "outputs": [
-    {
-      "id": "#result",
-      "schema": {"type": "string"},
-      "depth": 0
-    }
-  ],
-  "cliAdapter": {"baseCmd": ["to_string.py"]}
+  "inputs": {
+    "id": "#file1",
+    "type": "File",
+    "depth": 0
+  },
+  "outputs": {
+    "id": "#result",
+    "type": "string",
+    "depth": 0
+  },
+  "baseCmd": "to_string.py"
 }

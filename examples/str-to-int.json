@@ -1,5 +1,5 @@
 {
-  "class": "SimpleTransformTool",
+  "class": "ExpressionTool",
   "inputs": {
     "id": "#str",
     "depth": 0,
@@ -10,7 +10,7 @@
     "depth": 0,
     "type": "int"
   },
-  "script": {
+  "expression": {
     "class": "JavascriptExpression",
     "value": "{return {int: Number($job.inputs.str)};}"
   }

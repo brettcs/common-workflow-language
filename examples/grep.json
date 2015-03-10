@@ -25,7 +25,7 @@
       "id": "#output",
       "depth": 0,
       "type": "File",
-      "inputBinding": {"glob": "output.txt"}
+      "outputBinding": {"glob": "output.txt"}
     }
   ],
   "baseCmd": "grep",
